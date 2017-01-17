@@ -1,6 +1,6 @@
 {
     "version": "1.0.0",
-    "summary": "Helpers for working with Elm documentation.json files",
+    "summary": "Work with Elm documentation.json files in Elm",
     "repository": "https://github.com/elm-tools/documentation.git",
     "license": "BSD-3-Clause",
     "source-directories": [
@@ -11,7 +11,8 @@
         "Elm.Documentation.Type"
     ],
     "dependencies": {
-        "elm-lang/core": "5.0.0 <= v < 6.0.0"
+        "elm-lang/core": "5.0.0 <= v < 6.0.0",
+        "elm-tools/parser": "1.0.0 <= v < 2.0.0"
     },
     "elm-version": "0.18.0 <= v < 0.19.0"
 }
