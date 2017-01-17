@@ -1,7 +1,28 @@
 module Elm.Documentation exposing
   ( Documentation
+  , Alias, Union, Value
+  , Name, Associativity
   , decoder
   )
+
+
+{-| When packages are published to [package.elm-lang.org][pkg], documentation
+is generated for all of the exposed modules (and all of the exposed values).
+These docs are formatted as JSON for easy consumption by anyone.
+
+[pkg]: http://package.elm-lang.org/
+
+This module helps you decode the JSON docs into nice Elm values! It is
+currently used by [package.elm-lang.org][pkg] to help turn JSON into nice
+web pages!
+
+# Decode Docs
+@docs decoder
+
+# Work with Docs
+@docs Documentation, Alias, Union, Value, Name, Associativity
+
+-}
 
 
 import Json.Decode exposing (..)
@@ -13,6 +34,15 @@ import Elm.Documentation.Type as Type exposing (Type)
 -- DOCUMENTATION
 
 
+{-| All the documentation for a particular module.
+
+  * `name` is the module name
+  * `comment` is the module comment
+
+The actual exposed stuff is broken into categories. So all of the type aliases
+are available in `aliases`, all of the union types are in `unions`, and
+everything else is in `values`.
+-}
 type alias Documentation =
   { name : String
   , comment : String
@@ -22,6 +52,19 @@ type alias Documentation =
   }
 
 
+{-| Documentation for a type alias. For example, if you had the source code:
+
+    {-| pair of values -}
+    type alias Pair a = ( a, a )
+
+When it became an `Alias` it would be like this:
+
+    { name = "Pair"
+    , comment = " pair of values "
+    , args = ["a"]
+    , tipe = Tuple [ Var "a", Var "a" ]
+    }
+-}
 type alias Alias =
   { name : String
   , comment : String
@@ -30,6 +73,22 @@ type alias Alias =
   }
 
 
+{-| Documentation for a union type. For example, if you had the source code:
+
+    {-| maybe -}
+    type Maybe a = Nothing | Just a
+
+When it became a `Union` it would be like this:
+
+    { name = "Maybe"
+    , comment = " maybe "
+    , args = ["a"]
+    , tipe =
+        [ ("Nothing", [])
+        , ("Just", [Var "a"])
+        ]
+    }
+-}
 type alias Union =
   { name : String
   , comment : String
@@ -38,18 +97,62 @@ type alias Union =
   }
 
 
-type Value =
+{-| Documentation for values, functions, and operators. For example, if you
+had the source code:
+
+    {-| do not do anything -}
+    identity : a -> a
+    identity value =
+      value
+
+The `Value` would look like this:
+
+    { name = Name "identity"
+    , comment = " do not do anything "
+    , tipe = Lambda (Var "a") (Var "a")
+    }
+-}
+type alias Value =
   { name : Name
   , comment : String
   , tipe : Type
   }
 
 
+{-| Helps differentiate normal functions like `add` from operators like `(+)`.
+
+So when you get a [`Value`](#Value) of an operator, it would look like this:
+
+    { name = Op "+" Left 6
+    , comment = ""
+    , tipe = Lambda (Var "number") (Lambda (Var "number") (Var "number"))
+    }
+-}
 type Name
   = Name String
   | Op String Associativity Int
 
 
+{-| The [associativity][] of an infix operator. This determines how we add
+parentheses around everything. Here are some examples:
+
+    1 + 2 + 3 + 4
+
+We have to do the operations in *some* order, so which of these interpretations
+should we choose?
+
+    ((1 + 2) + 3) + 4   -- left-associative
+    1 + (2 + (3 + 4))   -- right-associative
+
+This is really important for operators like `(|>)`!
+
+Some operators are non-associative though, meaning we do not try to add
+missing parentheses. `(==)` is a nice example. `1 == 2 == 3` just is not
+allowed!
+
+[associativity]: https://en.wikipedia.org/wiki/Operator_associativity
+
+-}
 type Associativity = Left | None | Right
 
 
@@ -57,6 +160,11 @@ type Associativity = Left | None | Right
 -- DECODE
 
 
+{-| Decode the JSON documentation produced by `elm-make` for an individual
+module. The documentation for a whole package is an array of module docs,
+so you may need to say `(Decode.list Docs.decoder)` depending on what you
+want to do.
+-}
 decoder : Decoder Documentation
 decoder =
   succeed Documentation
@@ -128,10 +236,13 @@ toAssoc : String -> Decoder Associativity
 toAssoc str =
   case str of
     "left" ->
-      Left
+      succeed Left
 
     "non" ->
-      None
+      succeed None
 
     "right" ->
-      Right
+      succeed Right
+
+    _ ->
+      fail "expecting one of the following values: left, non, right"
