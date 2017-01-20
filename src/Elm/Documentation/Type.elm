@@ -16,6 +16,7 @@ check out the source code and go from there. It's not too tough!
 import Char
 import Json.Decode as Decode exposing (Decoder)
 import Parser exposing (Parser, (|=), (|.))
+import Parser.LanguageKit as Parser
 import Set
 import String
 
@@ -104,19 +105,20 @@ arrowAndType =
 
 arrow : Parser ()
 arrow =
-  Parser.string "->"
+  Parser.symbol "->"
 
 
 tipeTerm : Parser Type
 tipeTerm =
-  Parser.oneOf
-    [ Parser.map Var lowVar
-    , Parser.succeed Type
-        |= qualifiedCapVar
-        |= chompArgs []
-    , record
-    , tuple
-    ]
+  Parser.lazy <| \_ ->
+    Parser.oneOf
+      [ Parser.map Var lowVar
+      , Parser.succeed Type
+          |= qualifiedCapVar
+          |= chompArgs []
+      , record
+      , tuple
+      ]
 
 
 chompArgs : List Type -> Parser (List Type)
@@ -130,12 +132,13 @@ chompArgs revArgs =
 
 term : Parser Type
 term =
-  Parser.oneOf
-    [ Parser.map Var lowVar
-    , Parser.map (flip Type []) qualifiedCapVar
-    , record
-    , tuple
-    ]
+  Parser.lazy <| \_ ->
+    Parser.oneOf
+      [ Parser.map Var lowVar
+      , Parser.map (flip Type []) qualifiedCapVar
+      , record
+      , tuple
+      ]
 
 
 
@@ -144,13 +147,14 @@ term =
 
 record : Parser Type
 record =
-  Parser.succeed (flip Record)
-    |. Parser.string "{"
-    |. spaces
-    |= extension
-    |= commaSep field
-    |. spaces
-    |. Parser.string "}"
+  Parser.lazy <| \_ ->
+    Parser.succeed (flip Record)
+      |. Parser.symbol "{"
+      |. spaces
+      |= extension
+      |= commaSep field
+      |. spaces
+      |. Parser.symbol "}"
 
 
 extension : Parser (Maybe String)
@@ -166,18 +170,19 @@ ext =
   Parser.succeed Just
     |= lowVar
     |. spaces
-    |. Parser.string "|"
+    |. Parser.symbol "|"
     |. spaces
 
 
 field : Parser (String, Type)
 field =
-  Parser.succeed (,)
-    |= lowVar
-    |. spaces
-    |. Parser.string ":"
-    |. spaces
-    |= tipe
+  Parser.lazy <| \_ ->
+    Parser.succeed (,)
+      |= lowVar
+      |. spaces
+      |. Parser.symbol ":"
+      |. spaces
+      |= tipe
 
 
 
@@ -186,12 +191,8 @@ field =
 
 tuple : Parser Type
 tuple =
-  Parser.succeed tuplize
-    |. Parser.string "("
-    |. spaces
-    |= commaSep tipe
-    |. spaces
-    |. Parser.string ")"
+  Parser.map tuplize <|
+    Parser.tuple spaces tipe
 
 
 tuplize : List Type -> Type
@@ -230,14 +231,12 @@ qualifiedCapVar : Parser String
 qualifiedCapVar =
   Parser.mapWithSource always <|
     capVar
-      |. Parser.zeroOrMore (Parser.string "." |. capVar)
+      |. Parser.zeroOrMore (Parser.symbol "." |. capVar)
 
 
 variable : (Char -> Bool) -> Parser String
 variable isFirst =
-  Parser.mapWithSource always <|
-    Parser.ignore isFirst
-      |. Parser.ignoreWhile isInnerVarChar
+  Parser.variable isFirst isInnerVarChar Set.empty
 
 
 
@@ -275,4 +274,4 @@ commaAnd parser =
 
 comma : Parser ()
 comma =
-  Parser.string ","
+  Parser.symbol ","
