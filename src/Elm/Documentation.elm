@@ -1,7 +1,7 @@
 module Elm.Documentation exposing
   ( Documentation
   , Alias, Union, Value
-  , Name, Associativity
+  , Name(..), Associativity(..)
   , decoder
   )
 
@@ -171,7 +171,7 @@ decoder =
     & field "name" string
     & field "comment" string
     & field "aliases" (list aliasDecoder)
-    & field "unions" (list unionDecoder)
+    & field "types" (list unionDecoder)
     & field "values" (list valueDecoder)
 
 
