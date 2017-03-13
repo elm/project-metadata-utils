@@ -229,9 +229,9 @@ isInnerVarChar char =
 
 qualifiedCapVar : Parser String
 qualifiedCapVar =
-  Parser.mapWithSource always <|
+  Parser.source <|
     capVar
-      |. Parser.zeroOrMore (Parser.symbol "." |. capVar)
+      |. Parser.repeat Parser.zeroOrMore (Parser.symbol "." |. capVar)
 
 
 variable : (Char -> Bool) -> Parser String
@@ -245,7 +245,7 @@ variable isFirst =
 
 spaces : Parser ()
 spaces =
-  Parser.ignoreWhile (\char -> char == ' ')
+  Parser.ignore Parser.zeroOrMore (\char -> char == ' ')
 
 
 commaSep : Parser a -> Parser (List a)
