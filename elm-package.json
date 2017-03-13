@@ -1,5 +1,5 @@
 {
-    "version": "1.0.0",
+    "version": "1.0.1",
     "summary": "Work with Elm documentation.json files in Elm",
     "repository": "https://github.com/elm-tools/documentation.git",
     "license": "BSD-3-Clause",
