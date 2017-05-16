@@ -1,0 +1,17 @@
+{
+	"type": "package",
+	"name": "elm-lang/documentation",
+	"summary": "Work with Elm documentation.json files in Elm",
+	"license": "BSD-3-Clause",
+	"version": "1.0.0",
+	"exposed-modules": [
+		"Elm.Documentation",
+		"Elm.Documentation.Type"
+	],
+	"elm-version": "0.18.0 <= v < 0.19.0",
+	"dependencies": {
+		"elm-lang/core": "5.1.1 <= v < 6.0.0",
+		"elm-lang/parser": "1.0.0 <= v < 2.0.0"
+	},
+	"test-dependencies": {}
+}
