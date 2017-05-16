@@ -110,15 +110,14 @@ arrow =
 
 tipeTerm : Parser Type
 tipeTerm =
-  Parser.lazy <| \_ ->
-    Parser.oneOf
-      [ Parser.map Var lowVar
-      , Parser.succeed Type
-          |= qualifiedCapVar
-          |= chompArgs []
-      , record
-      , tuple
-      ]
+  Parser.oneOf
+    [ Parser.map Var lowVar
+    , Parser.succeed Type
+        |= qualifiedCapVar
+        |= chompArgs []
+    , record
+    , tuple
+    ]
 
 
 chompArgs : List Type -> Parser (List Type)
@@ -132,13 +131,12 @@ chompArgs revArgs =
 
 term : Parser Type
 term =
-  Parser.lazy <| \_ ->
-    Parser.oneOf
-      [ Parser.map Var lowVar
-      , Parser.map (flip Type []) qualifiedCapVar
-      , record
-      , tuple
-      ]
+  Parser.oneOf
+    [ Parser.map Var lowVar
+    , Parser.map (flip Type []) qualifiedCapVar
+    , record
+    , tuple
+    ]
 
 
 
@@ -147,14 +145,13 @@ term =
 
 record : Parser Type
 record =
-  Parser.lazy <| \_ ->
-    Parser.succeed (flip Record)
-      |. Parser.symbol "{"
-      |. spaces
-      |= extension
-      |= commaSep field
-      |. spaces
-      |. Parser.symbol "}"
+  Parser.succeed (flip Record)
+    |. Parser.symbol "{"
+    |. spaces
+    |= extension
+    |= commaSep field
+    |. spaces
+    |. Parser.symbol "}"
 
 
 extension : Parser (Maybe String)
@@ -176,13 +173,12 @@ ext =
 
 field : Parser (String, Type)
 field =
-  Parser.lazy <| \_ ->
-    Parser.succeed (,)
-      |= lowVar
-      |. spaces
-      |. Parser.symbol ":"
-      |. spaces
-      |= tipe
+  Parser.succeed (,)
+    |= lowVar
+    |. spaces
+    |. Parser.symbol ":"
+    |. spaces
+    |= tipe
 
 
 
