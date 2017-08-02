@@ -1,4 +1,4 @@
-module Elm.Documentation.Type exposing
+module Elm.Docs.Type exposing
   ( Type(..)
   , decoder
   )

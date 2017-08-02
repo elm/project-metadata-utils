@@ -1,5 +1,5 @@
-module Elm.Documentation exposing
-  ( Documentation
+module Elm.Docs exposing
+  ( Module
   , Alias, Union, Value
   , Name(..), Associativity(..)
   , decoder
@@ -20,14 +20,14 @@ web pages!
 @docs decoder
 
 # Work with Docs
-@docs Documentation, Alias, Union, Value, Name, Associativity
+@docs Module, Alias, Union, Value, Name, Associativity
 
 -}
 
 
 import Json.Decode exposing (..)
 
-import Elm.Documentation.Type as Type exposing (Type)
+import Elm.Docs.Type as Type exposing (Type)
 
 
 
@@ -43,7 +43,7 @@ The actual exposed stuff is broken into categories. So all of the type aliases
 are available in `aliases`, all of the union types are in `unions`, and
 everything else is in `values`.
 -}
-type alias Documentation =
+type alias Module =
   { name : String
   , comment : String
   , aliases : List Alias
@@ -165,9 +165,9 @@ module. The documentation for a whole package is an array of module docs,
 so you may need to say `(Decode.list Docs.decoder)` depending on what you
 want to do.
 -}
-decoder : Decoder Documentation
+decoder : Decoder Module
 decoder =
-  succeed Documentation
+  succeed Module
     & field "name" string
     & field "comment" string
     & field "aliases" (list aliasDecoder)
