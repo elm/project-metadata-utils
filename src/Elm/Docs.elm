@@ -3,6 +3,7 @@ module Elm.Docs exposing
   , Alias, Union, Value
   , Name(..), Associativity(..)
   , decoder
+  , Block(..), toBlocks
   )
 
 
@@ -21,6 +22,9 @@ web pages!
 
 # Work with Docs
 @docs Module, Alias, Union, Value, Name, Associativity
+
+# Split Docs into Blocks
+@docs toBlocks, Block
 
 -}
 
@@ -241,3 +245,106 @@ toAssoc str =
 
     _ ->
       fail "expecting one of the following values: left, non, right"
+
+
+
+-- TO BLOCKS
+
+
+{-| This type represents a `Block` of documentation to show to the user.
+After getting a `List Block` from `toBlocks`, everything is in the right order
+and you can focus on turning the blocks into HTML exactly how you want.
+
+**Note:** This should never produce an `UnknownBlock` but I figured it
+would be better to let the block visualizer decide what to do in that case.
+-}
+type Block
+  = MarkdownBlock String
+  | UnionBlock Union
+  | AliasBlock Alias
+  | ValueBlock Value
+  | UnknownBlock String
+
+
+{-| The module comment describes exactly how the generated docs should look.
+It is a mix of markdown and `@docs` declarations that specify when other
+documentation should appear. Matching all this information up is somewhat
+tricky though.
+
+So calling `toBlocks` on a `Module` gives you a `List Block` with all the
+information necessary to visualize the docs as intended.
+-}
+toBlocks : Module -> List Block
+toBlocks docs =
+  case String.split "\n@docs " docs.comment of
+    [] ->
+      []
+
+    firstMarkdown :: docsChunks ->
+      MarkdownBlock firstMarkdown
+      :: List.concatMap (chunkToBlocks docs) docsChunks
+
+
+chunkToBlocks : Module -> String -> List Block
+chunkToBlocks docs chunk =
+  partsToBlocks docs (String.split "," chunk)
+
+
+partsToBlocks : Module -> List String -> List Block
+partsToBlocks docs parts =
+  case parts of
+    [] ->
+      []
+
+    part :: otherParts ->
+      case String.words (String.trim part) of
+        [] ->
+          [ MarkdownBlock <| String.join "," parts ]
+
+        [name] ->
+          nameToBlock docs name
+          :: partsToBlocks docs otherParts
+
+        name :: _ ->
+          [ nameToBlock docs name
+          , MarkdownBlock <| String.join "," <|
+              String.dropLeft (String.length name) (String.trimLeft part) :: otherParts
+          ]
+
+
+nameToBlock : Module -> String -> Block
+nameToBlock docs docsName =
+  let
+    name =
+      if String.startsWith "(" docsName then
+        String.dropLeft 1 (String.dropRight 1 docsName)
+      else
+        docsName
+  in
+    find ValueBlock name getName docs.values <|
+    find UnionBlock name .name docs.unions <|
+    find AliasBlock name .name docs.aliases <|
+      UnknownBlock name
+
+
+find : (a -> Block) -> String -> (a -> String) -> List a -> Block -> Block
+find toBlock name toName entries fallback =
+  case entries of
+    [] ->
+      fallback
+
+    entry :: rest ->
+      if toName entry == name then
+        toBlock entry
+      else
+        find toBlock name toName rest fallback
+
+
+getName : Value -> String
+getName value =
+  case value.name of
+    Name string ->
+      string
+
+    Op string _ _ ->
+      string
