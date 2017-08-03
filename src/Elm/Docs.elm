@@ -167,61 +167,56 @@ want to do.
 -}
 decoder : Decoder Module
 decoder =
-  succeed Module
-    & field "name" string
-    & field "comment" string
-    & field "aliases" (list aliasDecoder)
-    & field "types" (list unionDecoder)
-    & field "values" (list valueDecoder)
-
-
-(&) : Decoder (a -> b) -> Decoder a -> Decoder b
-(&) =
-  map2 (<|)
+  map5 Module
+    (field "name" string)
+    (field "comment" string)
+    (field "aliases" (list aliasDecoder))
+    (field "types" (list unionDecoder))
+    (field "values" (list valueDecoder))
 
 
 aliasDecoder : Decoder Alias
 aliasDecoder =
-  succeed Alias
-    & field "name" string
-    & field "comment" string
-    & field "args" (list string)
-    & field "type" Type.decoder
+  map4 Alias
+    (field "name" string)
+    (field "comment" string)
+    (field "args" (list string))
+    (field "type" Type.decoder)
 
 
 unionDecoder : Decoder Union
 unionDecoder =
-  succeed Union
-    & field "name" string
-    & field "comment" string
-    & field "args" (list string)
-    & field "cases" (list tagDecoder)
+  map4 Union
+    (field "name" string)
+    (field "comment" string)
+    (field "args" (list string))
+    (field "cases" (list tagDecoder))
 
 
 tagDecoder : Decoder (String, List Type)
 tagDecoder =
-  succeed (,)
-    & index 0 string
-    & index 1 (list Type.decoder)
+  map2 (,)
+    (index 0 string)
+    (index 1 (list Type.decoder))
 
 
 
 valueDecoder : Decoder Value
 valueDecoder =
-  succeed Value
-    & nameDecoder
-    & field "comment" string
-    & field "type" Type.decoder
+  map3 Value
+    nameDecoder
+    (field "comment" string)
+    (field "type" Type.decoder)
 
 
 nameDecoder : Decoder Name
 nameDecoder =
   oneOf
     [
-      succeed Op
-        & field "name" string
-        & field "associativity" assocDecoder
-        & field "precedence" int
+      map3 Op
+        (field "name" string)
+        (field "associativity" assocDecoder)
+        (field "precedence" int)
     ,
       map Name (field "name" string)
     ]
