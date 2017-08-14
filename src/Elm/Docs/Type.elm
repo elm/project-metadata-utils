@@ -133,7 +133,7 @@ term : Parser Type
 term =
   Parser.oneOf
     [ Parser.map Var lowVar
-    , Parser.map (flip Type []) qualifiedCapVar
+    , Parser.map (\name -> Type name []) qualifiedCapVar
     , record
     , tuple
     ]
@@ -145,7 +145,7 @@ term =
 
 record : Parser Type
 record =
-  Parser.succeed (flip Record)
+  Parser.succeed (\ext fields -> Record fields ext)
     |. Parser.symbol "{"
     |. spaces
     |= extension
