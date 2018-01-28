@@ -199,7 +199,7 @@ unionDecoder =
 
 tagDecoder : Decoder (String, List Type)
 tagDecoder =
-  map2 (,)
+  map2 (\a b -> (a, b))
     (index 0 string)
     (index 1 (list Type.decoder))
 
