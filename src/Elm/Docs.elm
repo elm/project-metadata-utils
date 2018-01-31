@@ -1,7 +1,7 @@
 module Elm.Docs exposing
   ( Module
-  , Alias, Union, Value
-  , Name(..), Associativity(..)
+  , Alias, Union, Value, Binop
+  , Associativity(..)
   , decoder
   , Block(..), toBlocks
   )
@@ -21,7 +21,7 @@ web pages!
 @docs decoder
 
 # Work with Docs
-@docs Module, Alias, Union, Value, Name, Associativity
+@docs Module, Alias, Union, Value, Binop, Associativity
 
 # Split Docs into Blocks
 @docs toBlocks, Block
@@ -43,16 +43,15 @@ import Elm.Docs.Type as Type exposing (Type)
   * `name` is the module name
   * `comment` is the module comment
 
-The actual exposed stuff is broken into categories. So all of the type aliases
-are available in `aliases`, all of the union types are in `unions`, and
-everything else is in `values`.
+The actual exposed stuff is broken into categories.
 -}
 type alias Module =
   { name : String
   , comment : String
-  , aliases : List Alias
   , unions : List Union
+  , aliases : List Alias
   , values : List Value
+  , binops : List Binop
   }
 
 
@@ -101,8 +100,8 @@ type alias Union =
   }
 
 
-{-| Documentation for values, functions, and operators. For example, if you
-had the source code:
+{-| Documentation for values and functions. For example, if you had the source
+code:
 
     {-| do not do anything -}
     identity : a -> a
@@ -111,30 +110,35 @@ had the source code:
 
 The `Value` would look like this:
 
-    { name = Name "identity"
+    { name = "identity"
     , comment = " do not do anything "
     , tipe = Lambda (Var "a") (Var "a")
     }
 -}
 type alias Value =
-  { name : Name
+  { name : String
   , comment : String
   , tipe : Type
   }
 
 
-{-| Helps differentiate normal functions like `add` from operators like `(+)`.
+{-| Documentation for binary operators. The content for `(+)` might look
+something like this:
 
-So when you get a [`Value`](#Value) of an operator, it would look like this:
-
-    { name = Op "+" Left 6
-    , comment = ""
+    { name = "+"
+    , comment = "Add numbers"
     , tipe = Lambda (Var "number") (Lambda (Var "number") (Var "number"))
-    }
+    , associativity = Left
+    , precedence = 6
+    }8
 -}
-type Name
-  = Name String
-  | Op String Associativity Int
+type alias Binop =
+  { name : String
+  , comment : String
+  , tipe : Type
+  , associativity : Associativity
+  , precedence : Int
+  }
 
 
 {-| The [associativity][] of an infix operator. This determines how we add
@@ -171,12 +175,13 @@ want to do.
 -}
 decoder : Decoder Module
 decoder =
-  map5 Module
+  map6 Module
     (field "name" string)
     (field "comment" string)
+    (field "unions" (list unionDecoder))
     (field "aliases" (list aliasDecoder))
-    (field "types" (list unionDecoder))
     (field "values" (list valueDecoder))
+    (field "binops" (list binopDecoder))
 
 
 aliasDecoder : Decoder Alias
@@ -208,22 +213,19 @@ tagDecoder =
 valueDecoder : Decoder Value
 valueDecoder =
   map3 Value
-    nameDecoder
+    (field "name" string)
     (field "comment" string)
     (field "type" Type.decoder)
 
 
-nameDecoder : Decoder Name
-nameDecoder =
-  oneOf
-    [
-      map3 Op
-        (field "name" string)
-        (field "associativity" assocDecoder)
-        (field "precedence" int)
-    ,
-      map Name (field "name" string)
-    ]
+binopDecoder : Decoder Binop
+binopDecoder =
+  map5 Binop
+    (field "name" string)
+    (field "comment" string)
+    (field "type" Type.decoder)
+    (field "associativity" assocDecoder)
+    (field "precedence" int)
 
 
 assocDecoder : Decoder Associativity
@@ -321,7 +323,7 @@ nameToBlock docs docsName =
       else
         docsName
   in
-    find ValueBlock name getName docs.values <|
+    find ValueBlock name .name docs.values <|
     find UnionBlock name .name docs.unions <|
     find AliasBlock name .name docs.aliases <|
       UnknownBlock name
@@ -338,13 +340,3 @@ find toBlock name toName entries fallback =
         toBlock entry
       else
         find toBlock name toName rest fallback
-
-
-getName : Value -> String
-getName value =
-  case value.name of
-    Name string ->
-      string
-
-    Op string _ _ ->
-      string
