@@ -265,6 +265,7 @@ type Block
   | UnionBlock Union
   | AliasBlock Alias
   | ValueBlock Value
+  | BinopBlock Binop
   | UnknownBlock String
 
 
@@ -323,20 +324,24 @@ nameToBlock docs docsName =
       else
         docsName
   in
-    find ValueBlock name .name docs.values <|
-    find UnionBlock name .name docs.unions <|
-    find AliasBlock name .name docs.aliases <|
+    find ValueBlock name docs.values <|
+    find BinopBlock name docs.binops <|
+    find UnionBlock name docs.unions <|
+    find AliasBlock name docs.aliases <|
       UnknownBlock name
 
 
-find : (a -> Block) -> String -> (a -> String) -> List a -> Block -> Block
-find toBlock name toName entries fallback =
+type alias Info r = { r | name : String }
+
+
+find : (Info r -> Block) -> String -> List (Info r) -> Block -> Block
+find toBlock name entries fallback =
   case entries of
     [] ->
       fallback
 
     entry :: rest ->
-      if toName entry == name then
+      if entry.name == name then
         toBlock entry
       else
-        find toBlock name toName rest fallback
+        find toBlock name rest fallback
