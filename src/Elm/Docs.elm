@@ -31,7 +31,7 @@ web pages!
 
 import Json.Decode exposing (..)
 
-import Elm.Docs.Type as Type exposing (Type)
+import Elm.Type as Type exposing (Type)
 
 
 
