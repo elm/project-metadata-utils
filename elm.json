@@ -1,7 +1,7 @@
 {
 	"type": "package",
-	"name": "elm-lang/docs",
-	"summary": "Work with docs.json files in Elm",
+	"name": "elm-lang/project-metadata-utils",
+	"summary": "Work with elm.json and docs.json files in Elm",
 	"license": "BSD-3-Clause",
 	"version": "1.0.0",
 	"exposed-modules": {
