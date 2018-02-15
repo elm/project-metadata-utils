@@ -1,6 +1,8 @@
 # Work with `elm.json` and `docs.json`
 
-This package is meant for people creating Elm tooling, like . If you just want to make stuff in Elm, there is nothing here for you.
+This package is meant for people creating Elm tooling, like editor plugins. If you just want to make stuff in Elm, there is nothing here for you.
+
+Both `package.elm-lang.org` and `elm reactor` needed the functionality provided by this package, and over time, it became clear that this subset can be reasonably shared.
 
 
 ## Finding Metadata Files
