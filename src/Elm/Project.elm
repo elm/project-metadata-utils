@@ -136,7 +136,8 @@ encodeChunk (header, list) =
 
 encodeDeps : (constraint -> E.Value) -> Deps constraint -> E.Value
 encodeDeps encodeConstraint deps =
-  E.object (List.map (encodeDep encodeConstraint) (List.sortBy Tuple.first deps))
+  E.object <| List.sortBy Tuple.first <|
+    List.map (encodeDep encodeConstraint) deps
 
 
 encodeDep : (constraint -> E.Value) -> (Package.Name, constraint) -> (String, E.Value)
