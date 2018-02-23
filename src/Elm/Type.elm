@@ -1,4 +1,4 @@
-module Elm.Docs.Type exposing
+module Elm.Type exposing
   ( Type(..)
   , decoder
   )
@@ -62,8 +62,8 @@ decoderHelp string =
     Err error ->
       Decode.fail "TODO"
 
-    Ok tipe ->
-      Decode.succeed tipe
+    Ok actualType ->
+      Decode.succeed actualType
 
 
 
@@ -157,13 +157,13 @@ record =
 extension : Parser (Maybe String)
 extension =
   Parser.oneOf
-    [ Parser.delayedCommitMap always ext (Parser.succeed ())
+    [ Parser.delayedCommitMap always extensionHelp (Parser.succeed ())
     , Parser.succeed Nothing
     ]
 
 
-ext : Parser (Maybe String)
-ext =
+extensionHelp : Parser (Maybe String)
+extensionHelp =
   Parser.succeed Just
     |= lowVar
     |. spaces
@@ -173,7 +173,7 @@ ext =
 
 field : Parser (String, Type)
 field =
-  Parser.succeed (,)
+  Parser.succeed (\a b -> (a,b))
     |= lowVar
     |. spaces
     |. Parser.symbol ":"
@@ -194,8 +194,8 @@ tuple =
 tuplize : List Type -> Type
 tuplize args =
   case args of
-    [tipe] ->
-      tipe
+    [arg] ->
+      arg
 
     _ ->
       Tuple args
