@@ -12,6 +12,7 @@
 		"Helpers": [
 			"Elm.Type",
 			"Elm.Module",
+			"Elm.Package",
 			"Elm.Version",
 			"Elm.Constraint",
 			"Elm.License"

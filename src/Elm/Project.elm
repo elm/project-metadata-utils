@@ -4,6 +4,7 @@ module Elm.Project exposing
   ( Project(..)
   , ApplicationInfo
   , PackageInfo
+  , Deps
   , Exposed(..)
   , encode
   , decoder
@@ -13,7 +14,7 @@ module Elm.Project exposing
 {-| Turn `elm.json` files into data that is nice to use in Elm.
 
 # Projects
-@docs Project, ApplicationInfo, PackageInfo, Exposed
+@docs Project, ApplicationInfo, Deps, PackageInfo, Exposed
 
 # JSON Conversions
 @docs encode, decoder
