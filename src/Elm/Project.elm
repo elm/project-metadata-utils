@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wall #-}
-{-# LANGUAGE OverloadedStrings #-}
 module Elm.Project exposing
   ( Project(..)
   , ApplicationInfo
@@ -80,6 +78,8 @@ type Exposed
   | ExposedDict (List (String, List Module.Name))
 
 
+{-| The dependencies for a project. The order is preserved from JSON.
+-}
 type alias Deps constraint =
   List (Package.Name, constraint)
 
