@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Elm.Project exposing
   ( Project(..)
-  , BrowserInfo
+  , ApplicationInfo
   , PackageInfo
   , Exposed(..)
   , encode
@@ -13,7 +13,7 @@ module Elm.Project exposing
 {-| Turn `elm.json` files into data that is nice to use in Elm.
 
 # Projects
-@docs Project, BrowserInfo, PackageInfo, Exposed
+@docs Project, ApplicationInfo, PackageInfo, Exposed
 
 # JSON Conversions
 @docs encode, decoder
@@ -35,19 +35,18 @@ import Json.Encode as E
 -- PROJECT
 
 
-{-| There are two types of Elm projects, one for in-browser applications and
-another one for packages. The `elm.json` is different in each case, so we they
-are modeled as [`BrowserInfo`](#BrowserInfo) and [`PackageInfo`](#PackageInfo)
-types.
+{-| There are two types of Elm projects, one for applications and another one
+for packages. The `elm.json` is different in each case, so we they are modeled
+as [`ApplicationInfo`](#ApplicationInfo) and [`PackageInfo`](#PackageInfo) types.
 -}
 type Project
-  = Browser BrowserInfo
+  = Application ApplicationInfo
   | Package PackageInfo
 
 
-{-| The contents of an `elm.json` with `"type": "browser"`.
+{-| The contents of an `elm.json` with `"type": "application"`.
 -}
-type alias BrowserInfo =
+type alias ApplicationInfo =
   { elm : Version
   , dirs : List String
   , deps : Deps Version
@@ -93,9 +92,9 @@ type alias Deps constraint =
 encode : Project -> E.Value
 encode project =
   case project of
-    Browser { elm, dirs, deps, testDeps, transDeps } ->
+    Application { elm, dirs, deps, testDeps, transDeps } ->
       E.object
-        [ ("type", E.string "browser")
+        [ ("type", E.string "application")
         , ("source-directories", E.list E.string dirs)
         , ("elm-version", Version.encode elm)
         , ("dependencies", encodeDeps Version.encode deps)
@@ -159,21 +158,21 @@ decoder =
 decoderHelp : String -> D.Decoder Project
 decoderHelp tipe =
   case tipe of
-    "browser" ->
-      D.map Browser browserDecoder
+    "application" ->
+      D.map Application applicationDecoder
 
     "package" ->
       D.map Package packageDecoder
 
     other ->
       D.fail <|
-        """The "type" field must be either "browser" or "package", so """
+        """The "type" field must be either "application" or "package", so """
         ++ "\"" ++ other ++ "\" is not acceptable."
 
 
-browserDecoder : D.Decoder BrowserInfo
-browserDecoder =
-  D.map5 BrowserInfo
+applicationDecoder : D.Decoder ApplicationInfo
+applicationDecoder =
+  D.map5 ApplicationInfo
     (D.field "elm-version" Version.decoder)
     (D.field "source-directories" (D.list D.string))
     (D.field "dependencies" (depsDecoder Version.decoder))
