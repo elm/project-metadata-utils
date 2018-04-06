@@ -105,7 +105,7 @@ fromString string =
 
 checkNumbers : Int -> Int -> Int -> Maybe Version
 checkNumbers major minor patch =
-  if major >= 1 && minor >= 0 && patch >= 0 then
+  if major >= 0 && minor >= 0 && patch >= 0 then
     Just (Version major minor patch)
   else
     Nothing
