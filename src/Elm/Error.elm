@@ -135,6 +135,11 @@ type Chunk
   | Styled Style String
 
 
+{-| Widely supported styles for ANSI text. Bold and underline are used very
+rarely in Elm output. Mainly for a `Note` or a `Hint` about something. Colors
+are used relatively infrequently, primarily to draw attention to the most
+important information. Red is the problem, yellow is distilled advice, etc.
+-}
 type alias Style =
   { bold : Bool
   , underline : Bool
