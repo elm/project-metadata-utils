@@ -5,9 +5,10 @@
 	"license": "BSD-3-Clause",
 	"version": "1.0.0",
 	"exposed-modules": {
-		"Files": [
+		"Metadata": [
 			"Elm.Docs",
-			"Elm.Project"
+			"Elm.Project",
+			"Elm.Error"
 		],
 		"Helpers": [
 			"Elm.Type",
