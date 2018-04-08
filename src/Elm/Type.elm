@@ -246,8 +246,11 @@ spaces =
 
 commaSep : Parser a -> Parser (List a)
 commaSep parser =
-  parser
-    |> Parser.andThen (\first -> commaSepHelp parser [first])
+  Parser.oneOf
+    [ parser
+        |> Parser.andThen (\first -> commaSepHelp parser [first])
+    , Parser.succeed []
+    ]
 
 
 commaSepHelp : Parser a -> List a -> Parser (List a)
