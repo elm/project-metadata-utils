@@ -15,8 +15,7 @@ check out the source code and go from there. It's not too tough!
 
 import Char
 import Json.Decode as Decode exposing (Decoder)
-import Parser exposing (Parser, (|=), (|.))
-import Parser.LanguageKit as Parser
+import Parser exposing (..)
 import Set
 import String
 
@@ -70,7 +69,7 @@ decoderHelp string =
 -- PARSE TYPES
 
 
-parse : String -> Result Parser.Error Type
+parse : String -> Result (List DeadEnd) Type
 parse source =
   Parser.run tipe source
 
@@ -81,59 +80,60 @@ parse source =
 
 tipe : Parser Type
 tipe =
-  Parser.lazy <| \_ ->
-    tipeTerm
-      |> Parser.andThen tipeHelp
+  lazy <| \_ ->
+    andThen tipeHelp tipeTerm
 
 
 tipeHelp : Type -> Parser Type
 tipeHelp t =
-  Parser.oneOf
-    [ Parser.map (Lambda t) arrowAndType
-    , Parser.succeed t
+  oneOf
+    [ map (Lambda t) arrowAndType
+    , succeed t
     ]
 
 
 arrowAndType : Parser Type
 arrowAndType =
-  Parser.delayedCommit spaces <|
-    Parser.succeed identity
-      |. arrow
-      |. spaces
-      |= tipe
+  succeed identity
+    |. backtrackable spaces
+    |. arrow
+    |. spaces
+    |= tipe
 
 
 arrow : Parser ()
 arrow =
-  Parser.symbol "->"
+  symbol "->"
 
 
 tipeTerm : Parser Type
 tipeTerm =
-  Parser.oneOf
-    [ Parser.map Var lowVar
-    , Parser.succeed Type
+  oneOf
+    [ map Var lowVar
+    , succeed Type
         |= qualifiedCapVar
-        |= chompArgs []
+        |= loop [] chompArgs
     , record
     , tuple
     ]
 
 
-chompArgs : List Type -> Parser (List Type)
+chompArgs : List Type -> Parser (Step (List Type) (List Type))
 chompArgs revArgs =
-  Parser.oneOf
-    [ Parser.delayedCommit spaces term
-        |> Parser.andThen (\arg -> chompArgs (arg :: revArgs))
-    , Parser.succeed (List.reverse revArgs)
+  oneOf
+    [ succeed identity
+        |. backtrackable spaces
+        |= term
+        |> map (\arg -> Loop (arg :: revArgs))
+    , map (\_ -> Done (List.reverse revArgs)) (succeed ())
     ]
 
 
 term : Parser Type
 term =
-  Parser.oneOf
-    [ Parser.map Var lowVar
-    , Parser.map (\name -> Type name []) qualifiedCapVar
+  oneOf
+    [ map Var lowVar
+    , map (\name -> Type name []) qualifiedCapVar
     , record
     , tuple
     ]
@@ -145,38 +145,34 @@ term =
 
 record : Parser Type
 record =
-  Parser.succeed (\ext fields -> Record fields ext)
-    |. Parser.symbol "{"
+  succeed (\ext fields -> Record fields ext)
+    |. symbol "{"
     |. spaces
     |= extension
     |= commaSep field
     |. spaces
-    |. Parser.symbol "}"
+    |. symbol "}"
 
 
 extension : Parser (Maybe String)
 extension =
-  Parser.oneOf
-    [ Parser.delayedCommitMap always extensionHelp (Parser.succeed ())
-    , Parser.succeed Nothing
+  oneOf
+    [ succeed Just
+        |= backtrackable lowVar
+        |. backtrackable spaces
+        |. symbol "|"
+        |. spaces
+    , succeed Nothing
     ]
 
-
-extensionHelp : Parser (Maybe String)
-extensionHelp =
-  Parser.succeed Just
-    |= lowVar
-    |. spaces
-    |. Parser.symbol "|"
-    |. spaces
 
 
 field : Parser (String, Type)
 field =
-  Parser.succeed (\a b -> (a,b))
+  succeed (\a b -> (a,b))
     |= lowVar
     |. spaces
-    |. Parser.symbol ":"
+    |. symbol ":"
     |. spaces
     |= tipe
 
@@ -187,8 +183,16 @@ field =
 
 tuple : Parser Type
 tuple =
-  Parser.map tuplize <|
-    Parser.tuple spaces tipe
+  map tuplize <|
+    sequence
+      { start = "("
+      , separator = ","
+      , end = ")"
+      , spaces = spaces
+      , item = tipe
+      , trailing = Forbidden
+      }
+
 
 
 tuplize : List Type -> Type
@@ -207,32 +211,42 @@ tuplize args =
 
 lowVar : Parser String
 lowVar =
-  variable Char.isLower
+  var Char.isLower
 
 
 capVar : Parser String
 capVar =
-  variable Char.isUpper
+  var Char.isUpper
 
 
 isInnerVarChar : Char -> Bool
 isInnerVarChar char =
-  Char.isLower char
-  || Char.isUpper char
-  || Char.isDigit char
-  || char == '_'
+  Char.isAlphaNum char || char == '_'
 
 
 qualifiedCapVar : Parser String
 qualifiedCapVar =
-  Parser.source <|
+  getChompedString <|
     capVar
-      |. Parser.repeat Parser.zeroOrMore (Parser.symbol "." |. capVar)
+      |. loop () qualifiedCapVarHelp
+
+qualifiedCapVarHelp : () -> Parser (Step () ())
+qualifiedCapVarHelp _ =
+  oneOf
+    [ succeed (Loop ())
+        |. symbol "."
+        |. capVar
+    , succeed (Done ())
+    ]
 
 
-variable : (Char -> Bool) -> Parser String
-variable isFirst =
-  Parser.variable isFirst isInnerVarChar Set.empty
+var : (Char -> Bool) -> Parser String
+var isFirst =
+  variable
+    { start = isFirst
+    , inner = isInnerVarChar
+    , reserved = Set.empty
+    }
 
 
 
@@ -241,33 +255,32 @@ variable isFirst =
 
 spaces : Parser ()
 spaces =
-  Parser.ignore Parser.zeroOrMore (\char -> char == ' ')
+  chompWhile (\char -> char == ' ')
 
 
 commaSep : Parser a -> Parser (List a)
 commaSep parser =
   parser
-    |> Parser.andThen (\first -> commaSepHelp parser [first])
+    |> andThen (\first -> loop [first] (commaSepHelp parser))
 
 
-commaSepHelp : Parser a -> List a -> Parser (List a)
+commaSepHelp : Parser a -> List a -> Parser (Step (List a) (List a))
 commaSepHelp parser revList =
-  Parser.oneOf
-    [ commaAnd parser
-        |> Parser.andThen (\a -> commaSepHelp parser (a :: revList))
-    , Parser.succeed (List.reverse revList)
+  oneOf
+    [ commaAnd parser |> map (\a -> Loop (a :: revList))
+    , succeed () |> map (\_ -> Done (List.reverse revList))
     ]
 
 
 commaAnd : Parser a -> Parser a
 commaAnd parser =
-  Parser.delayedCommit spaces <|
-    Parser.succeed identity
-      |. comma
-      |. spaces
-      |= parser
+  succeed identity
+    |. backtrackable spaces
+    |. comma
+    |. spaces
+    |= parser
 
 
 comma : Parser ()
 comma =
-  Parser.symbol ","
+  symbol ","
