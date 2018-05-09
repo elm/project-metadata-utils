@@ -145,13 +145,11 @@ term =
 
 record : Parser Type
 record =
-  succeed (\ext fields -> Record fields ext)
+  succeed (\ext fs -> Record fs ext)
     |. symbol "{"
     |. spaces
     |= extension
-    |= commaSep field
-    |. spaces
-    |. symbol "}"
+    |= recordEnd
 
 
 extension : Parser (Maybe String)
@@ -169,12 +167,39 @@ extension =
 
 field : Parser (String, Type)
 field =
-  succeed (\a b -> (a,b))
+  succeed Tuple.pair
     |= lowVar
     |. spaces
     |. symbol ":"
     |. spaces
     |= tipe
+
+
+type alias Fields = List (String, Type)
+
+
+recordEnd : Parser Fields
+recordEnd =
+  oneOf
+    [ field
+        |. spaces
+        |> andThen (\f -> loop [f] recordEndHelp)
+    , succeed []
+        |. symbol "}"
+    ]
+
+
+recordEndHelp : Fields -> Parser (Step Fields Fields)
+recordEndHelp revFields =
+  oneOf
+    [ succeed (\f -> Loop (f :: revFields))
+        |. comma
+        |. spaces
+        |= field
+        |. spaces
+    , succeed (\_ -> Done (List.reverse revFields))
+        |= symbol "}"
+    ]
 
 
 
@@ -256,29 +281,6 @@ var isFirst =
 spaces : Parser ()
 spaces =
   chompWhile (\char -> char == ' ')
-
-
-commaSep : Parser a -> Parser (List a)
-commaSep parser =
-  parser
-    |> andThen (\first -> loop [first] (commaSepHelp parser))
-
-
-commaSepHelp : Parser a -> List a -> Parser (Step (List a) (List a))
-commaSepHelp parser revList =
-  oneOf
-    [ commaAnd parser |> map (\a -> Loop (a :: revList))
-    , succeed () |> map (\_ -> Done (List.reverse revList))
-    ]
-
-
-commaAnd : Parser a -> Parser a
-commaAnd parser =
-  succeed identity
-    |. backtrackable spaces
-    |. comma
-    |. spaces
-    |= parser
 
 
 comma : Parser ()
