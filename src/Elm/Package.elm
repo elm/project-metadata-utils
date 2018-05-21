@@ -57,19 +57,32 @@ toString (Name user project) =
 fromString : String -> Maybe Name
 fromString string =
   case String.split "/" string of
-    [user, project] ->
-      if String.all isGood user && String.all isGood project then
-        Just (Name user project)
-      else
+    [author, project] ->
+      if isBadProjectName project then
         Nothing
+      else
+        Just (Name author project)
 
     _ ->
       Nothing
 
 
-isGood : Char -> Bool
-isGood char =
-  Char.isAlpha char || char == '-'
+isBadProjectName : String -> Bool
+isBadProjectName project =
+  case String.uncons project of
+    Nothing ->
+      True
+
+    Just (c,_) ->
+      String.contains "--" project
+      || String.any isBadChar project
+      || String.startsWith "-" project
+      || not (Char.isLower c)
+
+
+isBadChar : Char -> Bool
+isBadChar char =
+  Char.isUpper char || char == '.' || char == '_'
 
 
 
