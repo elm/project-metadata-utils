@@ -7,14 +7,12 @@ module Elm.Docs exposing
   )
 
 
-{-| When packages are published to [package.elm-lang.org][pkg], documentation
+{-| When packages are published to `package.elm-lang.org`, documentation
 is generated for all of the exposed modules (and all of the exposed values).
 These docs are formatted as JSON for easy consumption by anyone.
 
-[pkg]: http://package.elm-lang.org/
-
 This module helps you decode the JSON docs into nice Elm values! It is
-currently used by [package.elm-lang.org][pkg] to help turn JSON into nice
+currently used by `package.elm-lang.org` to help turn JSON into nice
 web pages!
 
 # Decode Docs
