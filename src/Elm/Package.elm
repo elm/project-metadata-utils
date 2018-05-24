@@ -48,11 +48,13 @@ toString (Name user project) =
 
 {-| Try to convert a `String` into a `Name`:
 
-    fromString "elm-lang/core" == Just ...
-    fromString "elm-lang/html" == Just ...
-    fromString "elm_lang/html" == Nothing
-    fromString "elm-lang"      == Nothing
-    fromString "html"          == Nothing
+    fromString "elm/core"    == Just ...
+    fromString "elm/html"    == Just ...
+    fromString "tom/elm-css" == Just ...
+    fromString "tom/elm_css" == Nothing
+    fromString "tom/x.js"    == Nothing
+    fromString "elm"         == Nothing
+    fromString "html"        == Nothing
 -}
 fromString : String -> Maybe Name
 fromString string =
@@ -110,4 +112,4 @@ decoderHelp string =
       D.succeed name
 
     Nothing ->
-      D.fail "I need a valid package name like \"elm-lang/core\""
+      D.fail "I need a valid package name like \"elm/core\""

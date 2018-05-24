@@ -1,6 +1,6 @@
 {
 	"type": "package",
-	"name": "elm-lang/project-metadata-utils",
+	"name": "elm/project-metadata-utils",
 	"summary": "Work with elm.json and docs.json files in Elm",
 	"license": "BSD-3-Clause",
 	"version": "1.0.0",
@@ -21,9 +21,9 @@
 	},
 	"elm-version": "0.19.0 <= v < 0.20.0",
 	"dependencies": {
-		"elm-lang/core": "6.0.0 <= v < 7.0.0",
-		"elm-lang/json": "1.0.0 <= v < 2.0.0",
-		"elm-lang/parser": "1.0.0 <= v < 2.0.0"
+		"elm/core": "1.0.0 <= v < 2.0.0",
+		"elm/json": "1.0.0 <= v < 2.0.0",
+		"elm/parser": "1.0.0 <= v < 2.0.0"
 	},
 	"test-dependencies": {}
 }
