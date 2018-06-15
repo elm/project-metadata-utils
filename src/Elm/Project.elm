@@ -48,9 +48,10 @@ type Project
 type alias ApplicationInfo =
   { elm : Version
   , dirs : List String
-  , deps : Deps Version
-  , testDeps : Deps Version
-  , transDeps : Deps Version
+  , depsDirect : Deps Version
+  , depsIndirect : Deps Version
+  , testDepsDirect : Deps Version
+  , testDepsIndirect : Deps Version
   }
 
 
@@ -93,15 +94,22 @@ type alias Deps constraint =
 encode : Project -> E.Value
 encode project =
   case project of
-    Application { elm, dirs, deps, testDeps, transDeps } ->
+    Application { elm, dirs, depsDirect, depsIndirect, testDepsDirect, testDepsIndirect } ->
       E.object
         [ ("type", E.string "application")
         , ("source-directories", E.list E.string dirs)
         , ("elm-version", Version.encode elm)
-        , ("dependencies", encodeDeps Version.encode deps)
-        , ("test-dependencies", encodeDeps Version.encode testDeps)
-        , ("do-not-edit-this-by-hand"
-          , E.object [ ("transitive-dependencies", encodeDeps Version.encode transDeps) ]
+        , ("dependencies"
+          , E.object
+              [ ("direct", encodeDeps Version.encode depsDirect)
+              , ("indirect", encodeDeps Version.encode depsIndirect)
+              ]
+          )
+        , ("test-dependencies"
+          , E.object
+              [ ("direct", encodeDeps Version.encode testDepsDirect)
+              , ("indirect", encodeDeps Version.encode testDepsIndirect)
+              ]
           )
         ]
 
@@ -173,12 +181,13 @@ decoderHelp tipe =
 
 applicationDecoder : D.Decoder ApplicationInfo
 applicationDecoder =
-  D.map5 ApplicationInfo
+  D.map6 ApplicationInfo
     (D.field "elm-version" Version.decoder)
     (D.field "source-directories" (D.list D.string))
-    (D.field "dependencies" (depsDecoder Version.decoder))
-    (D.field "test-dependencies" (depsDecoder Version.decoder))
-    (D.at ["do-not-edit-this-by-hand", "transitive-dependencies"] (depsDecoder Version.decoder))
+    (D.at ["dependencies","direct"] (depsDecoder Version.decoder))
+    (D.at ["dependencies","indirect"] (depsDecoder Version.decoder))
+    (D.at ["test-dependencies","direct"] (depsDecoder Version.decoder))
+    (D.at ["test-dependencies","indirect"] (depsDecoder Version.decoder))
 
 
 packageDecoder : D.Decoder PackageInfo
