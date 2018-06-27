@@ -40,7 +40,7 @@ invalid `elm.json` file. The latter are much less common, but because they
 never have a `Region` they need to be handled separately.
 -}
 type Error
-  = GeneralProblem { path : String, title : String, message : List Chunk }
+  = GeneralProblem { path : Maybe String, title : String, message : List Chunk }
   | ModuleProblems (List BadModule)
 
 
@@ -62,7 +62,7 @@ toError tipe =
   case tipe of
     "error" ->
       D.map3 (\p t m -> GeneralProblem { path = p, title = t, message = m })
-        (D.field "path" D.string)
+        (D.field "path" (D.nullable D.string))
         (D.field "title" D.string)
         (D.field "message" (D.list chunkDecoder))
 
