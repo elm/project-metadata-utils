@@ -84,7 +84,7 @@ When it became a `Union` it would be like this:
     { name = "Maybe"
     , comment = " maybe "
     , args = ["a"]
-    , tipe =
+    , tags =
         [ ("Nothing", [])
         , ("Just", [Var "a"])
         ]
