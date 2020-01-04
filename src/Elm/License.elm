@@ -72,7 +72,7 @@ toString (License spdx _) =
     fromString "BSD-3-Clause" == Just bsd3
     fromString "BSD3"         == Nothing
 
-Notice that this function only succeds when given an OSI approved license
+Notice that this function only succeeds when given an OSI approved license
 in its SPDX abbreviation. Go [here](https://spdx.org/licenses/) for a full
 list of such licenses.
 -}
