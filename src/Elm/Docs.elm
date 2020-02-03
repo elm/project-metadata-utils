@@ -128,7 +128,7 @@ something like this:
     , tipe = Lambda (Var "number") (Lambda (Var "number") (Var "number"))
     , associativity = Left
     , precedence = 6
-    }8
+    }
 -}
 type alias Binop =
   { name : String
