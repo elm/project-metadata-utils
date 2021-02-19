@@ -70,7 +70,12 @@ isGoodChunk chunk =
       False
 
     Just (char, rest) ->
-      Char.isUpper char && String.all Char.isAlphaNum rest
+      Char.isUpper char && String.all isValidNameContinuation rest
+
+
+isValidNameContinuation : Char -> Bool
+isValidNameContinuation char =
+  Char.isAlphaNum char || char == '_'
 
 
 
