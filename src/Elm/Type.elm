@@ -26,17 +26,13 @@ import String
 
 {-| Represent Elm types as values! Here are some examples:
 
-    Int            ==> Type "Int" []
+    Int              ==> Type "Int" []
+    a -> b           ==> Lambda (Var "a") (Var "b")
+    ( a, b )         ==> Tuple [ Var "a", Var "b" ]
+    Maybe a          ==> Type "Maybe" [ Var "a" ]
+    { x : Int }      ==> Record [("x", Type "Int" [])] Nothing
+    { r | x : Int }  ==> Record [("x", Type "Int" [])] (Just "r")
 
-    a -> b         ==> Lambda (Var "a") (Var "b")
-
-    ( a, b )       ==> Tuple [ Var "a", Var "b" ]
-
-    Maybe a        ==> Type "Maybe" [ Var "a" ]
-
-    { x : Float }  ==> Record [("x", Type "Float" [])] Nothing
-
-    { v | x : Float }  ==> Record [("x", Type "Float" [])] (Just "v")
 -}
 type Type
   = Var String
