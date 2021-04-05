@@ -35,6 +35,8 @@ import String
     Maybe a        ==> Type "Maybe" [ Var "a" ]
 
     { x : Float }  ==> Record [("x", Type "Float" [])] Nothing
+
+    { v | x : Float }  ==> Record [("x", Type "Float" [])] (Just "v")
 -}
 type Type
   = Var String
