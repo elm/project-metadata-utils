@@ -35,7 +35,7 @@ import Json.Encode as E
 
 
 {-| There are two types of Elm projects, one for applications and another one
-for packages. The `elm.json` is different in each case, so we they are modeled
+for packages. The `elm.json` is different in each case, so they are modeled
 as [`ApplicationInfo`](#ApplicationInfo) and [`PackageInfo`](#PackageInfo) types.
 -}
 type Project
