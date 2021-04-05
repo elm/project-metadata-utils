@@ -70,11 +70,11 @@ isGoodChunk chunk =
       False
 
     Just (char, rest) ->
-      Char.isUpper char && String.all isValidModuleNameCharacter rest
+      Char.isUpper char && String.all isInner rest
 
 
-isValidModuleNameCharacter : Char -> Bool
-isValidModuleNameCharacter char =
+isInner : Char -> Bool
+isInner char =
   Char.isAlphaNum char || char == '_'
 
 
