@@ -144,7 +144,7 @@ encodeChunk (header, list) =
 
 encodeDeps : (constraint -> E.Value) -> Deps constraint -> E.Value
 encodeDeps encodeConstraint deps =
-  E.object <| List.sortBy Tuple.first <|
+  E.object <| List.sortBy (String.split "/" << Tuple.first) <|
     List.map (encodeDep encodeConstraint) deps
 
 
